@@ -71,12 +71,12 @@ trans = transforms.ToTensor()
 train_data = Cityscapes(root, split='train', mode='fine',
       target_type='semantic', transform=trans, target_transform=trans)
 train_loader = DataLoader(train_data, batch_size=batch_size,
-                          shuffle=True, num_workers=8)
+                          shuffle=True, num_workers=2)
 
 val_data = Cityscapes(root, split='val', mode='fine',
     target_type='semantic', transform=trans, target_transform=trans)
 val_loader = DataLoader(val_data, batch_size=batch_size,
-    shuffle=True, num_workers=8)
+    shuffle=True, num_workers=2)
 
 # img, show = train_data[0]
 # print(show)
