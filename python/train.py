@@ -12,8 +12,8 @@ from torchvision.datasets import Cityscapes
 import torchvision.transforms as transforms
 
 from fcn import VGGNet, FCN32s, FCN16s, FCN8s, FCNs
-from Cityscapes_loader import CityscapesDataset
-from CamVid_loader import CamVidDataset
+# from Cityscapes_loader import CityscapesDataset
+# from CamVid_loader import CamVidDataset
 
 from matplotlib import pyplot as plt
 import numpy as np
