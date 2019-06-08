@@ -83,7 +83,7 @@ val_loader = DataLoader(val_data, batch_size=batch_size,
 #############################################
 
 vgg_model = VGGNet(requires_grad=True, remove_fc=True)
-fcn_model = FCN16(pretrained_net=vgg_model, n_class=n_class)
+fcn_model = FCN32s(pretrained_net=vgg_model, n_class=n_class)
 
 if use_gpu:
     ts = time.time()
