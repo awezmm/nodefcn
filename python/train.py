@@ -71,12 +71,12 @@ trans = transforms.ToTensor()
 train_data = Cityscapes(root, split='train', mode='fine',
       target_type='semantic', transform=trans, target_transform=trans)
 train_loader = DataLoader(train_data, batch_size=batch_size,
-                          shuffle=True, num_workers=2)
+                          shuffle=True, num_workers=0)
 
 val_data = Cityscapes(root, split='val', mode='fine',
     target_type='semantic', transform=trans, target_transform=trans)
 val_loader = DataLoader(val_data, batch_size=batch_size,
-    shuffle=True, num_workers=2)
+    shuffle=True, num_workers=0)
 
 # img, show = train_data[0]
 # print(show)
@@ -87,7 +87,7 @@ fcn_model = FCN32s(pretrained_net=vgg_model, n_class=n_class)
 
 if use_gpu:
     ts = time.time()
-    vgg_model = vgg_model
+    vgg_model = vgg_model.cuda()
     fcn_model = fcn_model.cuda()
     fcn_model = nn.DataParallel(fcn_model, device_ids=num_gpu)
     print("Finish cuda loading, time elapsed {}".format(time.time() - ts))
