@@ -87,9 +87,9 @@ fcn_model = FCN32s(pretrained_net=vgg_model, n_class=n_class)
 
 if use_gpu:
     ts = time.time()
-    vgg_model = vgg_model.cuda()
+    vgg_model = vgg_model
     fcn_model = fcn_model.cuda()
-    # fcn_model = nn.DataParallel(fcn_model, device_ids=num_gpu)
+    fcn_model = nn.DataParallel(fcn_model, device_ids=num_gpu)
     print("Finish cuda loading, time elapsed {}".format(time.time() - ts))
 
 criterion = nn.BCEWithLogitsLoss()
