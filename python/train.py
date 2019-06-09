@@ -131,7 +131,7 @@ def train():
             optimizer.step()
 
             if iter % 10 == 0:
-                print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.data[0].item()))
+                print("epoch{}, iter{}, loss: {}".format(epoch, iter, loss.item()))
 
         print("Finish epoch {}, time elapsed {}".format(epoch, time.time() - ts))
         torch.save(fcn_model, model_path)
