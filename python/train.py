@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 # import torchvision.transforms as transforms
 
 from fcn import VGGNet, FCN32s, FCN16s, FCN8s, FCNs
-from Cityscapes_loader import CityscapesDataset
+from Cityscapes_loader import CityScapesDataset
 from CamVid_loader import CamVidDataset
 
 from matplotlib import pyplot as plt
@@ -20,7 +20,6 @@ import numpy as np
 import time
 import sys
 import os
-
 
 n_class    = 20
 
@@ -67,10 +66,10 @@ root_dir   = "CityScapes/"
 train_file = os.path.join(root_dir, "train.csv")
 val_file   = os.path.join(root_dir, "val.csv")
 
-train_data = CityscapesDataset(csv_file=train_file, phase='train')
+train_data = CityScapesDataset(csv_file=train_file, phase='train')
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=8)
 
-val_data = CityscapesDataset(csv_file=val_file, phase='val', flip_rate=0)
+val_data = CityScapesDataset(csv_file=val_file, phase='val', flip_rate=0)
 val_loader = DataLoader(val_data, batch_size=1, num_workers=8)
 
 # root = 'CityScapes'
