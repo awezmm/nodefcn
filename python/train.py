@@ -8,12 +8,12 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from torchvision.datasets import Cityscapes
-import torchvision.transforms as transforms
+# from torchvision.datasets import Cityscapes
+# import torchvision.transforms as transforms
 
 from fcn import VGGNet, FCN32s, FCN16s, FCN8s, FCNs
-# from Cityscapes_loader import CityscapesDataset
-# from CamVid_loader import CamVidDataset
+from Cityscapes_loader import CityscapesDataset
+from CamVid_loader import CamVidDataset
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -63,27 +63,35 @@ num_gpu = list(range(torch.cuda.device_count()))
 # val_loader = DataLoader(val_data, batch_size=1, num_workers=8)
 
 #############################################
+root_dir   = "CityScapes/"
+train_file = os.path.join(root_dir, "train.csv")
+val_file   = os.path.join(root_dir, "val.csv")
 
+train_data = CityscapesDataset(csv_file=train_file, phase='train')
+train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=8)
 
-root = 'CityScapes'
-trans = transforms.ToTensor()
+val_data = CityscapesDataset(csv_file=val_file, phase='val', flip_rate=0)
+val_loader = DataLoader(val_data, batch_size=1, num_workers=8)
 
-train_data = Cityscapes(root, split='train', mode='fine',
-      target_type='semantic', transform=trans, target_transform=trans)
-train_loader = DataLoader(train_data, batch_size=batch_size,
-                          shuffle=True, num_workers=0)
-
-val_data = Cityscapes(root, split='val', mode='fine',
-    target_type='semantic', transform=trans, target_transform=trans)
-val_loader = DataLoader(val_data, batch_size=batch_size,
-    shuffle=True, num_workers=0)
+# root = 'CityScapes'
+# trans = transforms.ToTensor()
+#
+# train_data = Cityscapes(root, split='train', mode='fine',
+#       target_type='semantic', transform=trans, target_transform=trans)
+# train_loader = DataLoader(train_data, batch_size=batch_size,
+#                           shuffle=True, num_workers=0)
+#
+# val_data = Cityscapes(root, split='val', mode='fine',
+#     target_type='semantic', transform=trans, target_transform=trans)
+# val_loader = DataLoader(val_data, batch_size=batch_size,
+#     shuffle=True, num_workers=0)
 
 # img, show = train_data[0]
 # print(show)
 #############################################
 
 vgg_model = VGGNet(requires_grad=True, remove_fc=True)
-fcn_model = FCN32s(pretrained_net=vgg_model, n_class=n_class)
+fcn_model = FCNs(pretrained_net=vgg_model, n_class=n_class)
 
 if use_gpu:
     ts = time.time()
@@ -109,14 +117,14 @@ def train():
         scheduler.step()
 
         ts = time.time()
-        for iter, (x, y) in enumerate(train_loader):
+        for iter, batch in enumerate(train_loader):
             optimizer.zero_grad()
 
             if use_gpu:
-                inputs = x.cuda()
-                labels = y.cuda()
+                inputs = Variable(batch['X'].cuda())
+                labels = Variable(batch['Y'].cuda())
             else:
-                inputs, labels = x, y
+                inputs, labels = Variable(batch['X']), Variable(batch['Y'])
 
             outputs = fcn_model(inputs)
             loss = criterion(outputs, labels)
@@ -132,36 +140,36 @@ def train():
         # val(epoch)
 
 
-# def val(epoch):
-#     fcn_model.eval()
-#     total_ious = []
-#     pixel_accs = []
-#     for iter, batch in enumerate(val_loader):
-#         if use_gpu:
-#             inputs = Variable(batch['X'].cuda())
-#         else:
-#             inputs = Variable(batch['X'])
-#
-#         output = fcn_model(inputs)
-#         output = output.data.cpu().numpy()
-#
-#         N, _, h, w = output.shape
-#         pred = output.transpose(0, 2, 3, 1).reshape(-1, n_class).argmax(axis=1).reshape(N, h, w)
-#
-#         target = batch['l'].cpu().numpy().reshape(N, h, w)
-#         for p, t in zip(pred, target):
-#             total_ious.append(iou(p, t))
-#             pixel_accs.append(pixel_acc(p, t))
-#
-#     # Calculate average IoU
-#     total_ious = np.array(total_ious).T  # n_class * val_len
-#     ious = np.nanmean(total_ious, axis=1)
-#     pixel_accs = np.array(pixel_accs).mean()
-#     print("epoch{}, pix_acc: {}, meanIoU: {}, IoUs: {}".format(epoch, pixel_accs, np.nanmean(ious), ious))
-#     IU_scores[epoch] = ious
-#     np.save(os.path.join(score_dir, "meanIU"), IU_scores)
-#     pixel_scores[epoch] = pixel_accs
-#     np.save(os.path.join(score_dir, "meanPixel"), pixel_scores)
+def val(epoch):
+    fcn_model.eval()
+    total_ious = []
+    pixel_accs = []
+    for iter, batch in enumerate(val_loader):
+        if use_gpu:
+            inputs = Variable(batch['X'].cuda())
+        else:
+            inputs = Variable(batch['X'])
+
+        output = fcn_model(inputs)
+        output = output.data.cpu().numpy()
+
+        N, _, h, w = output.shape
+        pred = output.transpose(0, 2, 3, 1).reshape(-1, n_class).argmax(axis=1).reshape(N, h, w)
+
+        target = batch['l'].cpu().numpy().reshape(N, h, w)
+        for p, t in zip(pred, target):
+            total_ious.append(iou(p, t))
+            pixel_accs.append(pixel_acc(p, t))
+
+    # Calculate average IoU
+    total_ious = np.array(total_ious).T  # n_class * val_len
+    ious = np.nanmean(total_ious, axis=1)
+    pixel_accs = np.array(pixel_accs).mean()
+    print("epoch{}, pix_acc: {}, meanIoU: {}, IoUs: {}".format(epoch, pixel_accs, np.nanmean(ious), ious))
+    IU_scores[epoch] = ious
+    np.save(os.path.join(score_dir, "meanIU"), IU_scores)
+    pixel_scores[epoch] = pixel_accs
+    np.save(os.path.join(score_dir, "meanPixel"), pixel_scores)
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
@@ -188,5 +196,5 @@ def pixel_acc(pred, target):
 
 
 if __name__ == "__main__":
-    # val(0)  # show the accuracy before training
+    val(0)  # show the accuracy before training
     train()
