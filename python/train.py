@@ -24,7 +24,7 @@ import os
 n_class    = 20
 
 batch_size = 6
-epochs     = 500
+epochs     = 50
 lr         = 1e-4
 momentum   = 0
 w_decay    = 1e-5
